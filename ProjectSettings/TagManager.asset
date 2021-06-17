@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - Fish
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: DeepWater
+    uniqueID: 2646209891
+    locked: 0
+  - name: Background
+    uniqueID: 3844420275
+    locked: 0
+  - name: Fisherman
+    uniqueID: 283256435
+    locked: 0
+  - name: LineAndHook
+    uniqueID: 1161685699
+    locked: 0
+  - name: Fauna
+    uniqueID: 2664222393
+    locked: 0

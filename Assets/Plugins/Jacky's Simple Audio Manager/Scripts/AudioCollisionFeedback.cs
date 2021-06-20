@@ -1,6 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using Zenject;
 
 namespace JSAM
 {
@@ -23,10 +22,12 @@ namespace JSAM
         [Tooltip("The collision event that triggers the sound to play")]
         CollisionEvent triggerEvent = CollisionEvent.OnCollisionEnter;
 
-        // Start is called before the first frame update
-        protected override void Start()
+        private AudioManager _audioManager;
+
+        [Inject]
+        public void Construct(AudioManager audioManager)
         {
-            base.Start();
+            _audioManager = audioManager;
         }
 
         void TriggerSound(Collision collision)
@@ -34,7 +35,7 @@ namespace JSAM
             if (collidesWith.Contains(collision.gameObject.layer))
             {
                 AudioSource source = null;
-                source = AudioManager.instance.PlaySoundInternal(sound, sTransform);
+                source = _audioManager.PlaySoundInternal(sound, sTransform);
                 if (spatialSound)
                 {
                     source.gameObject.transform.position = collision.GetContact(0).point;
@@ -47,7 +48,7 @@ namespace JSAM
             if (collidesWith.Contains(collision.gameObject.layer))
             {
                 AudioSource source = null;
-                source = AudioManager.instance.PlaySoundInternal(sound, sTransform);
+                source = _audioManager.PlaySoundInternal(sound, sTransform);
                 if (spatialSound)
                 {
                     source.gameObject.transform.position = collision.GetContact(0).point;

@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3711006664342407527}
+  - component: {fileID: 6760952118109808113}
   - component: {fileID: 401689096627956647}
   m_Layer: 0
   m_Name: ProjectContext
@@ -31,6 +32,18 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6760952118109808113
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3503482633409513846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b0136b623fe414dbd7d432dcfff33d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &401689096627956647
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -46,7 +59,7 @@ MonoBehaviour:
   _scriptableObjectInstallers: []
   _monoInstallers: []
   _installerPrefabs:
-  - {fileID: 2516106775598298805, guid: 145adc88a712af7428f9457f509db0b2, type: 3}
+  - {fileID: 6760952118109808113}
   _parentNewObjectsUnderContext: 1
   _editorReflectionBakingCoverageMode: 0
   _buildsReflectionBakingCoverageMode: 0

@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Events;
+﻿using UnityEngine;
+using Zenject;
 
 namespace JSAM 
 {
@@ -24,21 +22,23 @@ namespace JSAM
         [Header("Particle Settings")]
 
         [SerializeField]
-        ParticleEvent playSoundOn = ParticleEvent.ParticleEmitted;
+        private ParticleEvent playSoundOn = ParticleEvent.ParticleEmitted;
 
-        ParticleSystem partSys;
-        ParticleSystem.Particle[] particles;
-        float lowestLifetime = 99f;
+        private ParticleSystem _partSys;
+        private ParticleSystem.Particle[] _particles;
+        private float _lowestLifetime = 99f;
+        private AudioManager _audioManager;
 
-        void Awake()
+        [Inject]
+        public void Construct(AudioManager audioManager)
         {
-            partSys = GetComponent<ParticleSystem>();
-            particles = new ParticleSystem.Particle[partSys.main.maxParticles];
+            _audioManager = audioManager;
         }
 
-        protected override void Start()
+        private void Awake()
         {
-            base.Start();
+            _partSys = GetComponent<ParticleSystem>();
+            _particles = new ParticleSystem.Particle[_partSys.main.maxParticles];
         }
 
         public void PlaySound()
@@ -46,37 +46,36 @@ namespace JSAM
             switch (playSoundOn)
             {
                 case ParticleEvent.ParticleEmitted:
-                    AudioManager.instance.PlaySoundInternal(sound, sTransform);
+                    _audioManager.PlaySoundInternal(sound, sTransform);
                     break;
                 case ParticleEvent.ParticleDeath:
-                    AudioManager.instance.PlaySoundInternal(sound, sTransform);
+                    _audioManager.PlaySoundInternal(sound, sTransform);
                     break;
             }
         }
 
-        void LateUpdate()
+        private void LateUpdate()
         {
-            if (partSys.particleCount == 0)
+            if (_partSys.particleCount == 0)
                 return;
 
-            var numParticlesAlive = partSys.GetParticles(particles);
+            var numParticlesAlive = _partSys.GetParticles(_particles);
 
-            float youngestParticleLifetime;
-            var part = GetYoungestParticle(numParticlesAlive, particles, out youngestParticleLifetime);
-            if (lowestLifetime > youngestParticleLifetime)
+            GetYoungestParticle(numParticlesAlive, _particles, out var youngestParticleLifetime);
+            if (_lowestLifetime > youngestParticleLifetime)
             {
                 PlaySound();
             }
 
-            lowestLifetime = youngestParticleLifetime;
+            _lowestLifetime = youngestParticleLifetime;
         }
 
-        int GetYoungestParticle(int numPartAlive, ParticleSystem.Particle[] particles, out float lifetime)
+        private static int GetYoungestParticle(int numPartAlive, ParticleSystem.Particle[] particles, out float lifetime)
         {
-            int youngest = 0;
+            var youngest = 0;
 
             // Change only the particles that are alive
-            for (int i = 0; i < numPartAlive; i++)
+            for (var i = 0; i < numPartAlive; i++)
             {
 
                 if (i == 0)

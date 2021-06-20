@@ -1,6 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using Zenject;
 
 namespace JSAM
 {
@@ -15,27 +15,35 @@ namespace JSAM
 
         AudioSource source;
 
+        private AudioManager _audioManager;
+
+        [Inject]
+        public void Construct(AudioManager audioManager)
+        {
+            _audioManager = audioManager;
+        }
+
         // Start is called before the first frame update
         new void Start()
         {
             base.Start();
-            listener = AudioManager.instance.GetListenerInternal();
+            listener = _audioManager.GetListenerInternal();
 
-            source = AudioManager.instance.GetMusicSource();
+            source = _audioManager.GetMusicSource();
         }
 
         // Update is called once per frame
-        void Update()
+        private void Update()
         {
             float loudest = 0;
-            for (int i = 0; i < positions.Count; i++)
+            for (var i = 0; i < positions.Count; i++)
             {
-                float dist = Vector3.Distance(listener.transform.position, positions[i]);
+                var dist = Vector3.Distance(listener.transform.position, positions[i]);
                 if (dist <= maxDistance[i])
                 {
-                    if (!AudioManager.instance.IsMusicPlayingInternal(music))
+                    if (!_audioManager.IsMusicPlayingInternal(music))
                     {
-                        source = AudioManager.instance.PlayMusicInternal(music);
+                        source = _audioManager.PlayMusicInternal(music);
                     }
 
                     if (dist <= minDistance[i])
@@ -46,13 +54,13 @@ namespace JSAM
                     }
                     else
                     {
-                        float distanceFactor = Mathf.InverseLerp(maxDistance[i], minDistance[i], dist);
-                        float newVol = AudioManager.GetTrueMusicVolume() * music.relativeVolume * distanceFactor;
+                        var distanceFactor = Mathf.InverseLerp(maxDistance[i], minDistance[i], dist);
+                        var newVol = AudioManager.GetTrueMusicVolume() * music.relativeVolume * distanceFactor;
                         if (newVol > loudest) loudest = newVol;
                     }
                 }
             }
-            if (AudioManager.instance.IsMusicPlayingInternal(music)) source.volume = loudest;
+            if (_audioManager.IsMusicPlayingInternal(music)) source.volume = loudest;
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using UnityEditor;
 using UnityEngine;
 
 namespace JSAM
@@ -12,7 +11,7 @@ namespace JSAM
         /// </summary>
         [HideInInspector]
         [Tooltip("If true, music will always start and end between loop points")]
-        public bool clampToLoopPoints = false;
+        public bool clampToLoopPoints;
 
         [Tooltip("Standard looping disregards all loop point logic and will make the music loop from start to end, " + "\"Loop with Loop Points\" enables loop point use and makes the music start from the start point upon reaching the end")]
         [SerializeField]
@@ -43,8 +42,8 @@ namespace JSAM
         {
             if (cachedFile != file)
             {
-                string filePath = UnityEditor.AssetDatabase.GUIDToAssetPath(UnityEditor.AssetDatabase.FindAssets(file.name)[0]);
-                string trueFilePath = Application.dataPath.Remove(Application.dataPath.LastIndexOf("/") + 1) + filePath;
+                var filePath = AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(file.name)[0]);
+                var trueFilePath = Application.dataPath.Remove(Application.dataPath.LastIndexOf("/") + 1) + filePath;
                 fileExtension = trueFilePath.Substring(trueFilePath.Length - 4);
                 cachedFile = file;
             }

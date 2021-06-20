@@ -6,37 +6,42 @@ namespace Managers
     public class ButtonManager: MonoBehaviour
     {
 
-        private IdleManager idleManager;
+        private IdleManager _idleManager;
 
         [Inject]
-        public void Construct(IdleManager idleManagerZ)
+        public void Construct(IdleManager idleManager)
         {
-            idleManager = idleManagerZ;
+            _idleManager = idleManager;
         }
 
         public void BuyLength()
         {
-            idleManager.BuyLength();
+            _idleManager.BuyLength();
         }
         
         public void BuyStrength()
         {
-            idleManager.BuyStrength();
+            _idleManager.BuyStrength();
         }
 
         public void BuyOfflineEarnings()
         {
-            idleManager.BuyOfflineEarnings();
+            _idleManager.BuyOfflineEarnings();
         }
 
         public void Collect()
         {
-            idleManager.Collect();
+            _idleManager.Collect();
         }
 
         public void CollectDouble()
         {
-            idleManager.CollectDouble();
+            _idleManager.CollectDouble();
+        }
+
+        public void CastHook()
+        {
+            _idleManager.CastHook();
         }
     }
 }

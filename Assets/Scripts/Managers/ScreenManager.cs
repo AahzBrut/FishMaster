@@ -32,29 +32,29 @@ namespace Managers
         [SerializeField] private Text endScreenMoney;
         [SerializeField] private Text returnScreenMoney;
 
-        private Screens currentScreen;
+        private Screens _currentScreen;
 
-        private int gameCount;
+        private int _gameCount;
 
-        private Action[] actions;
+        private Action[] _actions;
 
-        private IdleManager idleManager;
+        private IdleManager _idleManager;
 
         [Inject]
-        public void Construct(IdleManager idleManagerZ)
+        public void Construct(IdleManager idleManager)
         {
-            idleManager = idleManagerZ;
+            _idleManager = idleManager;
         }
 
         private void Awake()
         {
             InitActions();
-            currentScreen = Screens.Main;
+            _currentScreen = Screens.Main;
         }
 
         private void InitActions()
         {
-            actions = new Action[]
+            _actions = new Action[]
             {
                 OnStartMainScreen,
                 OnStartGameScreen,
@@ -67,14 +67,15 @@ namespace Managers
         {
             CheckIdles();
             UpdateTexts();
+            ChangeScreen(Screens.Main);
         }
 
         public void ChangeScreen(Screens newScreen)
         {
-            screens[(int)currentScreen].SetActive(false);
-            currentScreen = newScreen;
-            actions[(int)currentScreen].Invoke();
-            screens[(int)currentScreen].SetActive(true);
+            screens[(int)_currentScreen].SetActive(false);
+            _currentScreen = newScreen;
+            _actions[(int)_currentScreen].Invoke();
+            screens[(int)_currentScreen].SetActive(true);
         }
 
         private void OnStartMainScreen()
@@ -85,7 +86,7 @@ namespace Managers
 
         private void OnStartGameScreen()
         {
-            gameCount++;
+            _gameCount++;
         }
         private void OnStartEndScreen()
         {
@@ -98,22 +99,30 @@ namespace Managers
 
         public void SetEndScreenMoney()
         {
-            endScreenMoney.text = $"${idleManager.TotalGain}";
+            endScreenMoney.text = $"${_idleManager.TotalGain}";
         }
         
         public void SetReturnScreenMoney()
         {
-            returnScreenMoney.text = $"${idleManager.TotalGain} gained while waiting!";
+            returnScreenMoney.text = $"${_idleManager.TotalGain} gained while waiting!";
         }
 
         private void UpdateTexts()
         {
-            gameScreenMoney.text = $"${idleManager.Wallet}";
+            gameScreenMoney.text = $"${_idleManager.Wallet}";
+            lengthCostText.text = $"${_idleManager.LengthCost}";
+            lengthValueText.text = $"{_idleManager.Length} m";
+            strengthCostText.text = $"${_idleManager.StrengthCost}";
+            strengthValueText.text = $"{_idleManager.Strength} fishes";
+            offlineCostText.text = $"${_idleManager.OfflineEarningsCost}";
+            offlineValueText.text = $"${_idleManager.OfflineEarnings}/min";
         }
 
         private void CheckIdles()
         {
-            throw new NotImplementedException();
+            buyLengthButton.interactable = _idleManager.Wallet >= _idleManager.LengthCost;
+            buyStrengthButton.interactable = _idleManager.Wallet >= _idleManager.StrengthCost;
+            buyOfflineEarningsButton.interactable = _idleManager.Wallet >= _idleManager.OfflineEarningsCost;
         }
     }
 }

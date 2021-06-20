@@ -9,140 +9,142 @@ namespace Hook
 {
     public class HookController : MonoBehaviour
     {
-        private Camera mainCamera;
-        private Collider2D myCollider;
-        private Transform myTransform;
-        private Transform hookedTransform;
+        private Camera _mainCamera;
+        private Collider2D _myCollider;
+        private Transform _myTransform;
+        private Transform _hookedTransform;
 
-        private int length;
-        private int strength;
-        private int fishCount;
+        private int _length;
+        private int _strength;
+        private int _fishCount;
 
-        private readonly List<FishController> hookedFishes = new List<FishController>();
+        private readonly List<FishController> _hookedFishes = new List<FishController>();
 
-        private bool canMove;
-        private bool canCastHook = true;
+        private bool _canMove;
 
-        private Tweener cameraTween;
+        private Tweener _cameraTween;
 
         private const float MinFishingDepth = -25f;
         private const float CameraFollowDepth = -11f;
         private const float HookStartingDepth = -6f;
 
-        private IdleManager idleManager;
+        private IdleManager _idleManager;
+        private ScreenManager _screenManager;
 
         [Inject]
-        public void ConstructorHandling(IdleManager idleManagerZ)
+        public void ConstructorHandling(IdleManager idleManager, ScreenManager screenManager)
         {
-            idleManager = idleManagerZ;
+            _idleManager = idleManager;
+            _screenManager = screenManager;
         }
 
         private void Awake()
         {
-            mainCamera = Camera.main;
-            myCollider = GetComponent<Collider2D>();
-            myTransform = transform;
-            hookedTransform = myTransform.Find("HookedCatch").transform;
-            idleManager.Length = 30;
+            _mainCamera = Camera.main;
+            _myCollider = GetComponent<Collider2D>();
+            _myTransform = transform;
+            _hookedTransform = _myTransform.Find("HookedCatch").transform;
+            _idleManager.CastHook = StartFishing;
         }
 
         private void Update()
         {
-            if (canMove && Input.GetMouseButton(0))
+            if (_canMove && Input.GetMouseButton(0))
             {
-                var vector = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-                var position = myTransform.position;
+                var vector = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
+                var position = _myTransform.position;
                 position.x = vector.x;
-                myTransform.position = position;
+                _myTransform.position = position;
             }
-            if (canCastHook && Input.GetMouseButton(0))
-                StartFishing();
         }
 
         private void StartFishing()
         {
-            length = -50;
-            strength = 3;
-            fishCount = 0;
-            var time = -length * .1f;
+            _length = -_idleManager.Length;
+            _strength = _idleManager.Strength;
+            _fishCount = 0;
+            var time = -_length * .1f;
 
-            cameraTween = mainCamera.transform.DOMoveY(length, 1 + time * .25f);
-            cameraTween.onUpdate = AttachHookToCameraOnMoveDown;
-            cameraTween.onComplete = () => MoveHookUp(time);
+            _cameraTween = _mainCamera.transform.DOMoveY(_length, 1 + time * .25f);
+            _cameraTween.onUpdate = AttachHookToCameraOnMoveDown;
+            _cameraTween.onComplete = () => MoveHookUp(time);
 
-            myCollider.enabled = false;
-            canMove = true;
-            canCastHook = false;
-            hookedFishes.Clear();
+            _screenManager.ChangeScreen(Screens.Game);
+            
+            _myCollider.enabled = false;
+            _canMove = true;
+            _hookedFishes.Clear();
         }
 
         private void AttachHookToCameraOnMoveDown()
         {
-            if (mainCamera.transform.position.y <= CameraFollowDepth)
-                myTransform.SetParent(mainCamera.transform);
+            if (_mainCamera.transform.position.y <= CameraFollowDepth)
+                _myTransform.SetParent(_mainCamera.transform);
         }
 
         private void MoveHookUp(float time)
         {
-            myCollider.enabled = true;
-            cameraTween = mainCamera.transform.DOMoveY(0f, time * 5f);
-            cameraTween.onUpdate = CheckDepthForStopFishing;
+            _myCollider.enabled = true;
+            _cameraTween = _mainCamera.transform.DOMoveY(0f, time * 5f);
+            _cameraTween.onUpdate = CheckDepthForStopFishing;
         }
 
         private void ResetHook()
         {
-            myCollider.enabled = false;
-            canCastHook = true;
+            _myCollider.enabled = false;
             var sumCatchPrice = 0;
-            foreach (var fish in hookedFishes)
+            foreach (var fish in _hookedFishes)
             {
                 fish.transform.SetParent(null);
                 fish.ResetFish();
                 sumCatchPrice += fish.FishData.price;
             }
+
+            _idleManager.TotalGain = sumCatchPrice;
+            _screenManager.ChangeScreen(Screens.End);
         }
 
         private void CheckDepthForStopFishing()
         {
-            if (mainCamera.transform.position.y >= MinFishingDepth)
+            if (_mainCamera.transform.position.y >= MinFishingDepth)
                 StopFishing();
         }
 
         private void StopFishing()
         {
-            canMove = false;
-            cameraTween.Kill();
-            cameraTween = mainCamera.transform.DOMoveY(0, 2);
-            cameraTween.onUpdate = CheckForResetHook;
-            cameraTween.onComplete = ResetHook;
+            _canMove = false;
+            _cameraTween.Kill();
+            _cameraTween = _mainCamera.transform.DOMoveY(0, 2);
+            _cameraTween.onUpdate = CheckForResetHook;
+            _cameraTween.onComplete = ResetHook;
         }
 
         private void CheckForResetHook()
         {
-            if (mainCamera.transform.position.y >= CameraFollowDepth)
+            if (_mainCamera.transform.position.y >= CameraFollowDepth)
             {
-                myTransform.SetParent(null);
-                myTransform.position = new Vector2(transform.position.x, HookStartingDepth);
+                _myTransform.SetParent(null);
+                _myTransform.position = new Vector2(transform.position.x, HookStartingDepth);
             }
         }
 
         private void OnTriggerEnter2D(Collider2D target)
         {
-            if (target.CompareTag("Fish") && strength > fishCount)
+            if (target.CompareTag("Fish") && _strength > _fishCount)
             {
-                fishCount++;
+                _fishCount++;
                 var fishController = target.GetComponent<FishController>();
-                hookedFishes.Add(fishController);
+                _hookedFishes.Add(fishController);
                 fishController.OnHooked();
                 var targetTransform = target.transform;
-                targetTransform.SetParent(hookedTransform);
-                targetTransform.position = hookedTransform.position;
-                targetTransform.rotation = hookedTransform.rotation;
+                targetTransform.SetParent(_hookedTransform);
+                targetTransform.position = _hookedTransform.position;
+                targetTransform.rotation = _hookedTransform.rotation;
                 targetTransform.localScale = Vector3.one;
                 var shakeTween = targetTransform.DOShakeRotation(5f, Vector3.forward * 45f).SetLoops(1, LoopType.Yoyo);
                 shakeTween.onComplete = () => ResetRotation(targetTransform);
             }
-            if (strength == fishCount) StopFishing();
+            if (_strength == _fishCount) StopFishing();
         }
 
         private static void ResetRotation(Transform target)

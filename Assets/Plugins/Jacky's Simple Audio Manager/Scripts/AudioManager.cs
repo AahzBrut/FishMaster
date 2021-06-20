@@ -233,8 +233,6 @@ namespace JSAM
                 DontDestroyOnLoad(gameObject);
             }
 
-            EstablishSingletonDominance(true);
-
             if (!initialized)
             {
                 // Initialize helper arrays

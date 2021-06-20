@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
+using Zenject;
 
 namespace JSAM
 {
@@ -13,26 +14,32 @@ namespace JSAM
     [AddComponentMenu("AudioManager/Audio Player")]
     public class AudioPlayer : BaseAudioFeedback
     {
-        [Tooltip("Behaviour to trigger when the object this is attached to is created")]
-        [SerializeField]
-        AudioPlaybackBehaviour onStart = AudioPlaybackBehaviour.Play;
+        [Tooltip("Behaviour to trigger when the object this is attached to is created")] [SerializeField]
+        private AudioPlaybackBehaviour onStart = AudioPlaybackBehaviour.Play;
 
         [Tooltip("Behaviour to trigger when the object this is attached to is enabled or when the object is created")]
         [SerializeField]
-        AudioPlaybackBehaviour onEnable = AudioPlaybackBehaviour.None;
+        private AudioPlaybackBehaviour onEnable = AudioPlaybackBehaviour.None;
 
         [Tooltip("Behaviour to trigger when the object this is attached to is destroyed or set to in-active")]
         [SerializeField]
-        AudioPlaybackBehaviour onDisable = AudioPlaybackBehaviour.Stop;
+        private AudioPlaybackBehaviour onDisable = AudioPlaybackBehaviour.Stop;
 
-        [Tooltip("Behaviour to trigger when the object this is attached to is destroyed")]
-        [SerializeField]
-        AudioPlaybackBehaviour onDestroy = AudioPlaybackBehaviour.None;
+        [Tooltip("Behaviour to trigger when the object this is attached to is destroyed")] [SerializeField]
+        private AudioPlaybackBehaviour onDestroy = AudioPlaybackBehaviour.None;
 
         /// <summary>
         /// Boolean prevents the sound from being played multiple times when the Start and OnEnable callbacks intersect
         /// </summary>
-        bool activated;
+        private bool _activated;
+
+        private AudioManager _audioManager;
+
+        [Inject]
+        public void Construct(AudioManager audioManager)
+        {
+            _audioManager = audioManager;
+        }
 
         // Start is called before the first frame update
         protected override void Start()
@@ -42,11 +49,12 @@ namespace JSAM
             switch (onStart)
             {
                 case AudioPlaybackBehaviour.Play:
-                    if (!activated)
+                    if (!_activated)
                     {
-                        activated = true;
+                        _activated = true;
                         StartCoroutine(PlayOnEnable());
                     }
+
                     break;
                 case AudioPlaybackBehaviour.Stop:
                     Stop();
@@ -56,51 +64,33 @@ namespace JSAM
 
         public AudioSource Play()
         {
-            AudioManager am = AudioManager.instance;
-            AudioSource source;
-
-            if (loopSound)
-            {
-                source = am.PlaySoundLoopInternal(sound, sTransform);
-            }
-            else source = am.PlaySoundInternal(sound, sTransform);
+            var source = loopSound
+                ? _audioManager.PlaySoundLoopInternal(sound, sTransform)
+                : _audioManager.PlaySoundInternal(sound, sTransform);
 
             // Ready to play again later
-            activated = false;
+            _activated = false;
 
             return source;
         }
 
         void PlayAtPosition()
         {
-            AudioManager am = AudioManager.instance;
-            AudioSource source;
-
             if (loopSound)
             {
-                if (sound.spatialize)
-                {
-                    source = am.PlaySoundLoopInternal(sound, sTransform.position);
-                }
-                else
-                {
-                    source = am.PlaySoundLoopInternal(sound, null);
-                }
+                var unused = sound.spatialize ? 
+                    _audioManager.PlaySoundLoopInternal(sound, sTransform.position) : 
+                    _audioManager.PlaySoundLoopInternal(sound, null);
             }
             else
             {
-                if (sound.spatialize)
-                {
-                    source = am.PlaySoundInternal(sound, sTransform.position);
-                }
-                else
-                {
-                    source = am.PlaySoundInternal(sound, null);
-                }
+                var unused = sound.spatialize ? 
+                    _audioManager.PlaySoundInternal(sound, sTransform.position) : 
+                    _audioManager.PlaySoundInternal(sound, null);
             }
 
             // Ready to play again later
-            activated = false;
+            _activated = false;
         }
 
         public void PlaySound()
@@ -113,21 +103,18 @@ namespace JSAM
         /// </summary>
         public void Stop()
         {
-            AudioManager am = AudioManager.instance;
-
-            if (am == null) return;
             if (!loopSound)
             {
-                if (am.IsSoundPlayingInternal(sound, sTransform))
+                if (_audioManager.IsSoundPlayingInternal(sound, sTransform))
                 {
-                    am.StopSoundInternal(sound, sTransform);
+                    _audioManager.StopSoundInternal(sound, sTransform);
                 }
             }
             else
             {
-                if (am.IsSoundLoopingInternal(sound))
+                if (_audioManager.IsSoundLoopingInternal(sound))
                 {
-                    am.StopSoundLoopInternal(sound, true, sTransform);
+                    _audioManager.StopSoundLoopInternal(sound, true, sTransform);
                 }
             }
         }
@@ -137,11 +124,12 @@ namespace JSAM
             switch (onEnable)
             {
                 case AudioPlaybackBehaviour.Play:
-                    if (!activated)
+                    if (!_activated)
                     {
-                        activated = true;
+                        _activated = true;
                         StartCoroutine(PlayOnEnable());
                     }
+
                     break;
                 case AudioPlaybackBehaviour.Stop:
                     Stop();
@@ -149,13 +137,9 @@ namespace JSAM
             }
         }
 
-        IEnumerator PlayOnEnable()
+        private IEnumerator PlayOnEnable()
         {
-            while (!AudioManager.instance)
-            {
-                yield return new WaitForEndOfFrame();
-            }
-            while (!AudioManager.instance.Initialized())
+            while (!_audioManager.Initialized())
             {
                 yield return new WaitForEndOfFrame();
             }

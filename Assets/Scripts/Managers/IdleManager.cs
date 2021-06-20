@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Zenject;
 
 namespace Managers
 {
@@ -15,7 +16,9 @@ namespace Managers
         public int Wallet { get; set; }
         public int TotalGain { get; set; }
 
-        private int[] costs =
+        public Action CastHook;
+
+        private readonly int[] _costs =
         {
             120,
             151,
@@ -38,15 +41,24 @@ namespace Managers
             11687
         };
 
+        private ScreenManager _screenManager;
+
+        [Inject]
+        public void Construct(ScreenManager screenManager)
+        {
+            _screenManager = screenManager;
+        }
+
         private void Awake()
         {
             Length = PlayerPrefs.GetInt("Length", 30);
             Strength = PlayerPrefs.GetInt("Strength", 3);
             OfflineEarnings = PlayerPrefs.GetInt("OfflineEarnings", 3);
-            LengthCost = costs[Length / 10 - 3];
-            StrengthCost = costs[Strength - 3];
-            OfflineEarningsCost = costs[OfflineEarnings - 3];
+            LengthCost = _costs[Length / 10 - 3];
+            StrengthCost = _costs[Strength - 3];
+            OfflineEarningsCost = _costs[OfflineEarnings - 3];
             Wallet = PlayerPrefs.GetInt("Wallet", 0);
+            DontDestroyOnLoad(this);
         }
 
         private void OnApplicationPause(bool pauseStatus)
@@ -63,6 +75,7 @@ namespace Managers
                 {
                     var dateTime = DateTime.Parse(stringDate);
                     TotalGain = (int) ((DateTime.Now - dateTime).TotalMinutes * OfflineEarnings + 1f);
+                    _screenManager?.ChangeScreen(Screens.Return);
                 }
             }
         }
@@ -77,9 +90,10 @@ namespace Managers
             if (Wallet < LengthCost) return;
             Length += 10;
             Wallet -= LengthCost;
-            LengthCost = costs[Length / 10 - 3];
+            LengthCost = _costs[Length / 10 - 3];
             PlayerPrefs.SetInt("Length", Length);
             PlayerPrefs.SetInt("Wallet", Wallet);
+            _screenManager.ChangeScreen(Screens.Main);
         }
         
         public void BuyStrength()
@@ -87,9 +101,10 @@ namespace Managers
             if (Wallet < StrengthCost) return;
             Strength++;
             Wallet -= StrengthCost;
-            StrengthCost = costs[Strength - 3];
+            StrengthCost = _costs[Strength - 3];
             PlayerPrefs.SetInt("Strength", Strength);
             PlayerPrefs.SetInt("Wallet", Wallet);
+            _screenManager.ChangeScreen(Screens.Main);
         }
 
         public void BuyOfflineEarnings()
@@ -97,21 +112,29 @@ namespace Managers
             if (Wallet < OfflineEarningsCost) return;
             OfflineEarnings++;
             Wallet -= OfflineEarningsCost;
-            OfflineEarningsCost = costs[OfflineEarnings - 3];
+            OfflineEarningsCost = _costs[OfflineEarnings - 3];
             PlayerPrefs.SetInt("OfflineEarnings", OfflineEarnings);
             PlayerPrefs.SetInt("Wallet", Wallet);
+            _screenManager.ChangeScreen(Screens.Main);
         }
 
         public void Collect()
         {
             Wallet += TotalGain;
             PlayerPrefs.SetInt("Wallet", Wallet);
+            _screenManager.ChangeScreen(Screens.Main);
         }
 
         public void CollectDouble()
         {
             Wallet += TotalGain;
             PlayerPrefs.SetInt("Wallet", Wallet);
+            _screenManager.ChangeScreen(Screens.Main);
+        }
+
+        public void DoCastHook()
+        {
+            CastHook?.Invoke();
         }
     }
 }

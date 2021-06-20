@@ -13,7 +13,7 @@ namespace Installers
 
         private static GameObject CreateIdleManagerPrefab()
         {
-            var idleManager = new GameObject();
+            var idleManager = new GameObject("IdleManager");
             idleManager.AddComponent<IdleManager>();
             return idleManager;
         }
